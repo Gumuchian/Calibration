@@ -18,7 +18,7 @@ Processing::Processing(int Nbre, double threshold):N(Nbre),EP(Nbre),thres(thresh
 void Processing::calibrate(QString pulse_path, QString noise_path)
 {
     std::string str;
-    std::fstream pulse_file,noise_file,save_RI,save_f,test,save_noise;
+    std::fstream pulse_file,noise_file,save_RI,save_f;
     std::vector<double> energy,t0;
 
     //Set offset
@@ -310,21 +310,24 @@ void Processing::calibrate(QString pulse_path, QString noise_path)
         }
     }
     pulse_file.close();
-    test.open("Test.txt",std::ios::out);
+
     vector<double> E((int)energy.size()),coeff(3);
     matrix<double> T((int)energy.size(),3),Tinv(3,3),Tin(3,3);
-    test << std::setprecision(10);
     for (int i=0;i<(int)energy.size();i++)
     {
         E(i)=energy[i];
-        test << energy[i] << "\t" << t0[i] << std::endl;
         for (int j=0;j<3;j++)
         {
             T(i,j)=pow(t0[i],2-j);
         }
     }
-    test.close();
     Tin=prod(trans(T),T);
     EP.InvertMatrix(Tin,Tinv);
     coeff=prod(prod(Tinv,trans(T)),trans(E));
+    save_f.open("Factor.txt",std::ios::out|std::ios::app);
+    for (int i=0;i<3;i++)
+    {
+        save_f << coeff(i) << std::endl;
+    }
+    save_f.close();
 }

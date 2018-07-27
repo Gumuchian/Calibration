@@ -42,6 +42,7 @@ class Event_Processor
         double getFactor();
         double gett0();
         void setOffset(double off);
+        void setCorr_coeff(vector<double> v);
 
     private:
         int counter;
@@ -54,6 +55,7 @@ class Event_Processor
         vector<double> OutputFilter;
         vector<double> ImpulseResponse;
         vector<double> Poly_coeff;
+        vector<double> corr_coeff;
         double Trigger_output;
         int RecordSize;
         double factor;
