@@ -157,16 +157,11 @@ void Event_Processor::recordImpulseResponse()
         fft(module);
         if (mode)
         {
-            std::fstream file;
-            file.open("test.txt",std::ios::out|std::ios::app);
             pulse_fft+=abs(module);
             for (int j=0;j<RecordSize;j++)
             {
-                file << Record(j) << "\t";
                 pulse_phase[j]=arg(module[j]);
             }
-            file << std::endl;
-            file.close();
         }
         else
         {

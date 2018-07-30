@@ -14,10 +14,6 @@ MainWindow::MainWindow(QWidget *parent) :
     QObject::connect(ui->Generate,SIGNAL(clicked()), this, SLOT(compute()));
     proc = new Processing(1024,40);
     setWindowTitle("Calibration");
-    /*QStringList args;
-    args=QCoreApplication::arguments();
-    pulse_filename=args[0];
-    noise_filename=args[1];*/
 }
 
 MainWindow::~MainWindow()
