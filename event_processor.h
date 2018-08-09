@@ -46,16 +46,18 @@ class Event_Processor
 
     private:
         int counter;
+        int count;
+        bool wait;
         double Threshold;
         bool ReadyToCompute;
         bool recording;
         vector<double> Trigger_coeff;
         vector<double> Buffer;
+        vector<double> corr_coeff;
         vector<double> Record;
         vector<double> OutputFilter;
         vector<double> ImpulseResponse;
         vector<double> Poly_coeff;
-        vector<double> corr_coeff;
         double Trigger_output;
         int RecordSize;
         double factor;

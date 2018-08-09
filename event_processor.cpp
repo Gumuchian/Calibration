@@ -16,6 +16,8 @@ Event_Processor::Event_Processor()
 Event_Processor::Event_Processor(int Npattern):Trigger_coeff(8,0),Buffer(8,0),corr_coeff(3,0),Record(Npattern+2,0),OutputFilter(3,0),ImpulseResponse(Npattern,0),Z(3,3),pulse_fft(Npattern),noise_fft(Npattern),pulse_phase(Npattern),IR(Npattern)
 {
     counter = 0;
+    count = 0;
+    wait = false;
     factor_count = 0;
     factor = 0;
     energy = 0;
@@ -65,7 +67,16 @@ void Event_Processor::trigger_function()
     {
         ReadyToCompute = false;
     }
-    if (std::abs(Trigger_output) > Threshold)
+    if (std::abs(Trigger_output) > Threshold && count == 0)
+    {
+        wait = true;
+    }
+    if (wait && std::abs(Trigger_output) < Threshold)
+    {
+        wait = false;
+    }
+    count ++;
+    if (std::abs(Trigger_output) > Threshold && !wait)
     {
         recording = true;
     }
@@ -78,6 +89,7 @@ void Event_Processor::trigger_function()
             recording = false;
             ReadyToCompute = true;
             counter = 0;
+            count = 0;
         }
     }
 }
