@@ -314,18 +314,14 @@ void Processing::calibrate(QString pulse_path, QString noise_path)
 
     vector<double> E((int)energy.size()),coeff(3);
     matrix<double> T((int)energy.size(),3),Tinv(3,3),Tin(3,3);
-    std::fstream test;
-    test.open("test.txt",std::ios::out);
     for (int i=0;i<(int)energy.size();i++)
     {
-        test << energy[i] << "\t" << t0[i] << std::endl;
         E(i)=energy[i];
         for (int j=0;j<3;j++)
         {
             T(i,j)=pow(t0[i],2-j);
         }
     }
-    test.close();
     Tin=prod(trans(T),T);
     EP.InvertMatrix(Tin,Tinv);
     coeff=prod(prod(Tinv,trans(T)),trans(E));
