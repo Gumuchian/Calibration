@@ -45,6 +45,7 @@ class Event_Processor
         void setCorr_coeff(vector<double> v);
 
     private:
+        int index;
         int counter;
         int count;
         bool wait;

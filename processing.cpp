@@ -73,7 +73,8 @@ void Processing::calibrate(QString pulse_path, QString noise_path)
         }
     }
     noise_file.close();
-    EP.setOffset(s_offset/s);
+    s_offset/=s;
+    EP.setOffset(s_offset);
 
 
     // Record pulse for IR
@@ -130,7 +131,7 @@ void Processing::calibrate(QString pulse_path, QString noise_path)
     EP.setRecording();
     pulse_file.close();
 
-
+/*
     // Record noise for IR
     noise_file.open(noise_path.toStdString(), std::ios::in|std::ios::binary);
     noise_file.seekg(0, std::ios::end);
@@ -185,8 +186,8 @@ void Processing::calibrate(QString pulse_path, QString noise_path)
     noise_file.close();
     //Compute IR
     EP.computeImpulseResponse();
-
-
+*/
+/*
     CArray OF(N);
     vector<double> IR(N);
     OF = EP.getIR();
@@ -199,8 +200,8 @@ void Processing::calibrate(QString pulse_path, QString noise_path)
     save_RI.close();
     EP.setImpulseResponse(IR);
     EP.setRecording();
-
-
+*/
+/*
     //Record factor
     pulse_file.open(pulse_path.toStdString(), std::ios::in|std::ios::binary);
     pulse_file.seekg(0, std::ios::end);
@@ -257,7 +258,7 @@ void Processing::calibrate(QString pulse_path, QString noise_path)
     //Compute factor
     EP.computeFactor();
     save_f.open("Factor.txt",std::ios::out);
-    save_f << EP.getFactor() << std::endl;
+    save_f << EP.getFactor() << std::endl << s_offset << std::endl;
     save_f.close();
 
 
@@ -330,5 +331,5 @@ void Processing::calibrate(QString pulse_path, QString noise_path)
     {
         save_f << coeff(i) << std::endl;
     }
-    save_f.close();
+    save_f.close();*/
 }

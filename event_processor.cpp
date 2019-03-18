@@ -13,8 +13,9 @@ Event_Processor::Event_Processor()
 
 }
 
-Event_Processor::Event_Processor(int Npattern):Trigger_coeff(8,0),Buffer(8,0),corr_coeff(3,0),Record(Npattern+2,0),OutputFilter(3,0),ImpulseResponse(Npattern,0),Z(3,3),pulse_fft(Npattern),noise_fft(Npattern),pulse_phase(Npattern),IR(Npattern)
+Event_Processor::Event_Processor(int Npattern):Trigger_coeff(8,0),Buffer(200,0),corr_coeff(3,0),Record(Npattern+2,0),OutputFilter(3,0),ImpulseResponse(Npattern,0),Z(3,3),pulse_fft(Npattern),noise_fft(Npattern),pulse_phase(Npattern),IR(Npattern)
 {
+    index = 0;
     counter = 0;
     count = 0;
     wait = false;
@@ -27,7 +28,7 @@ Event_Processor::Event_Processor(int Npattern):Trigger_coeff(8,0),Buffer(8,0),co
     corr_coeff(0)=0;
     corr_coeff(1)=0;
     corr_coeff(2)=7000;
-    for (int k=0;k<8;k++)
+    /*for (int k=0;k<8;k++)
     {
         if (k<4)
         {
@@ -37,7 +38,7 @@ Event_Processor::Event_Processor(int Npattern):Trigger_coeff(8,0),Buffer(8,0),co
         {
             Trigger_coeff(k) = 1;
         }
-    }
+    }*/
     matrix<double> X(3,3);
     for (int i=0;i<3;i++)
     {
@@ -62,7 +63,9 @@ Event_Processor::~Event_Processor()
 void Event_Processor::trigger_function()
 {
     //Trigger_output = inner_prod(Buffer,Trigger_coeff);
-    Trigger_output = offset - Buffer(0);
+    std::fstream file_pulse;
+    file_pulse.open("Pulses.txt",std::ios::out | std::ios::app);
+    Trigger_output = offset - Buffer(index);
     if (!recording && ReadyToCompute)
     {
         ReadyToCompute = false;
@@ -82,7 +85,8 @@ void Event_Processor::trigger_function()
     }
     if (recording)
     {
-        Record(counter) = offset - Buffer(2);
+        Record(counter) = offset - Buffer((index-199)%200);
+        file_pulse << Record(counter) << "/t";
         counter++;
         if (counter == RecordSize+2)
         {
@@ -90,8 +94,12 @@ void Event_Processor::trigger_function()
             ReadyToCompute = true;
             counter = 0;
             count = 0;
+            file_pulse << std::endl;
         }
     }
+    index ++;
+    index = index%200;
+    file_pulse.close();
 }
 
 void Event_Processor::computeOptimalFilter()
@@ -107,16 +115,12 @@ void Event_Processor::computeFit()
     Poly_coeff=prod(Z,OutputFilter);
     energy=7000.0*(Poly_coeff(2)-pow(Poly_coeff(1),2)/(2*Poly_coeff(0)))/factor;
     t0=-Poly_coeff(1)/(2*Poly_coeff(0));
-    energy/=(corr_coeff(0)*pow(t0,2)+corr_coeff(1)*t0+corr_coeff(2))/7000;
+    energy/=(corr_coeff(0)*pow(t0,2)+corr_coeff(1)*t0+corr_coeff(2))/7000.0;
 }
 
 void Event_Processor::setInput(double input)
 {
-    for (int i=7;i>0;i--)
-    {
-        Buffer(i) = Buffer(i-1);
-    }
-    Buffer(0) = input;
+    Buffer(index) = input;
 }
 
 double Event_Processor::getEnergy()
@@ -166,35 +170,34 @@ void Event_Processor::recordImpulseResponse()
             c[i]=Record(i+1);
             module[i]=c[i];
         }
-        fft(module);
         if (mode)
         {
-            pulse_fft+=abs(module);
-            for (int j=0;j<RecordSize;j++)
-            {
-                pulse_phase[j]=arg(module[j]);
-            }
+            pulse_fft+=module;
         }
         else
         {
-            noise_fft+=abs(module);
+            fft(module);
+            noise_fft+=pow(abs(module),2);
         }
     }
 }
 
 void Event_Processor::computeImpulseResponse()
 {
+    fft(pulse_fft);
     IR = pulse_fft/noise_fft;
-    const Complex const_i(0,1);
-    for (int i=0;i<RecordSize;i++)
-    {
-        IR[i]*=std::exp(const_i*pulse_phase[i]);
-    }
+    //std::fstream file_noise,file_pulse;
+    //file_noise.open("Noise_spectrum.txt",std::ios::out);
+    //file_pulse.open("Pulse_spectrum.txt",std::ios::out);
     ifft(IR);
     for (int i=0;i<RecordSize;i++)
     {
         IR[i]=std::real(IR[i]);
+        //file_noise << noise_fft[i] << std::endl;
+        //file_pulse << pulse_fft[i] << std::endl;
     }
+    //file_pulse.close();
+    //file_noise.close();
 }
 
 void Event_Processor::recordFactor()
@@ -307,3 +310,4 @@ double Event_Processor::getData(char buffer[])
     }
     return sqrt(pow(I,2)+pow(Q,2));
 }
+
