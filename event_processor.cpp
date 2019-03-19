@@ -1,4 +1,4 @@
-#include "event_processor.h"
+ #include "event_processor.h"
 #include <boost/numeric/ublas/matrix.hpp>
 #include <boost/numeric/ublas/lu.hpp>
 #include <boost/numeric/ublas/io.hpp>
@@ -28,7 +28,7 @@ Event_Processor::Event_Processor(int Npattern):Trigger_coeff(8,0),Buffer(200,0),
     corr_coeff(0)=0;
     corr_coeff(1)=0;
     corr_coeff(2)=7000;
-    /*for (int k=0;k<8;k++)
+    for (int k=0;k<8;k++)
     {
         if (k<4)
         {
@@ -38,7 +38,7 @@ Event_Processor::Event_Processor(int Npattern):Trigger_coeff(8,0),Buffer(200,0),
         {
             Trigger_coeff(k) = 1;
         }
-    }*/
+    }
     matrix<double> X(3,3);
     for (int i=0;i<3;i++)
     {
@@ -63,8 +63,8 @@ Event_Processor::~Event_Processor()
 void Event_Processor::trigger_function()
 {
     //Trigger_output = inner_prod(Buffer,Trigger_coeff);
-    std::fstream file_pulse;
-    file_pulse.open("Pulses.txt",std::ios::out | std::ios::app);
+    std::fstream file;
+    file.open("Pulses.txt",std::ios::out | std::ios::app);
     Trigger_output = offset - Buffer(index);
     if (!recording && ReadyToCompute)
     {
@@ -86,7 +86,7 @@ void Event_Processor::trigger_function()
     if (recording)
     {
         Record(counter) = offset - Buffer((index-199)%200);
-        file_pulse << Record(counter) << "/t";
+        file << Record(counter) << "\t";
         counter++;
         if (counter == RecordSize+2)
         {
@@ -94,12 +94,12 @@ void Event_Processor::trigger_function()
             ReadyToCompute = true;
             counter = 0;
             count = 0;
-            file_pulse << std::endl;
+            file << std::endl;
         }
     }
     index ++;
     index = index%200;
-    file_pulse.close();
+    file.close();
 }
 
 void Event_Processor::computeOptimalFilter()
