@@ -18,7 +18,7 @@ Processing::Processing(int Nbre, double threshold):N(Nbre),EP(Nbre),thres(thresh
 void Processing::calibrate(QString pulse_path, QString noise_path)
 {
     std::string str;
-    std::fstream pulse_file,noise_file,save_RI,save_f,test;
+    std::fstream pulse_file,noise_file,save_RI,save_f;
     std::vector<double> energy,t0;
 
     //Set offset
@@ -85,7 +85,6 @@ void Processing::calibrate(QString pulse_path, QString noise_path)
     pulse_file.open(pulse_path.toStdString(), std::ios::in|std::ios::binary);
     pulse_file >> std::noskipws;
 
-    test.open("Test.txt",std::ios::out);
     EP.setMode(true);
     EP.setThreshold(thres);
     j=0;
@@ -121,9 +120,8 @@ void Processing::calibrate(QString pulse_path, QString noise_path)
 
                 if (j%pas==0)
                 {
-                    test << EP.getData(IQ) << std::endl;
-                    //EP.setInput(EP.getData(IQ));
-                    //EP.recordImpulseResponse();
+                    EP.setInput(EP.getData(IQ));
+                    EP.recordImpulseResponse();
                 }
             }
             j++;
@@ -131,9 +129,7 @@ void Processing::calibrate(QString pulse_path, QString noise_path)
     }
     EP.setRecording();
     pulse_file.close();
-    test.close();
 
-/*
     // Record noise for IR
     noise_file.open(noise_path.toStdString(), std::ios::in|std::ios::binary);
     noise_file.seekg(0, std::ios::end);
@@ -186,10 +182,11 @@ void Processing::calibrate(QString pulse_path, QString noise_path)
     }
     EP.setRecording();
     noise_file.close();
+
     //Compute IR
     EP.computeImpulseResponse();
-*/
-/*
+
+
     CArray OF(N);
     vector<double> IR(N);
     OF = EP.getIR();
@@ -202,7 +199,7 @@ void Processing::calibrate(QString pulse_path, QString noise_path)
     save_RI.close();
     EP.setImpulseResponse(IR);
     EP.setRecording();
-*/
+
 /*
     //Record factor
     pulse_file.open(pulse_path.toStdString(), std::ios::in|std::ios::binary);
