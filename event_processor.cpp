@@ -172,7 +172,7 @@ void Event_Processor::recordImpulseResponse()
         else
         {
             fft(module);
-            noise_fft+=pow(abs(module),2);
+            noise_fft+=module;
         }
     }
 }
@@ -180,9 +180,12 @@ void Event_Processor::recordImpulseResponse()
 void Event_Processor::computeImpulseResponse()
 {
     fft(pulse_fft);
-    IR = pulse_fft/noise_fft;
-    //std::fstream file_noise,file_pulse,IR_file;
-    //file_noise.open("Noise_spectrum.txt",std::ios::out);
+    for (int i=0;i<RecordSize;i++)
+    {
+        IR[i] = pulse_fft[i]/abs(noise_fft[i]);
+    }
+    std::fstream file_noise,file_pulse,IR_file;
+    file_noise.open("Noise_spectrum.txt",std::ios::out);
     //file_pulse.open("Pulse_spectrum.txt",std::ios::out);
     //IR_file.open("IR.txt",std::ios::out);
     ifft(IR);
@@ -190,7 +193,7 @@ void Event_Processor::computeImpulseResponse()
     {
         IR[i]=real(IR[i]);
         //IR_file << std::real(IR[i]) << std::endl;
-        //file_noise << abs(noise_fft[i]) << std::endl;
+        file_noise << abs(noise_fft[i]) << std::endl;
         //file_pulse << abs(pulse_fft[i]) << std::endl;
     }
     //IR_file.close();

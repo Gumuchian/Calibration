@@ -17,6 +17,10 @@ Processing::Processing(int Nbre, double threshold):N(Nbre),EP(Nbre),thres(thresh
 
 void Processing::calibrate(QString pulse_path, QString noise_path)
 {
+    std::fstream pulse,noise;
+    pulse.open("Pulse.txt",std::ios::in);
+    noise.open("Noise.txt",std::ios::in);
+
     std::string str;
     std::fstream pulse_file,noise_file,save_RI,save_f;
     std::vector<double> energy,t0;
@@ -65,13 +69,19 @@ void Processing::calibrate(QString pulse_path, QString noise_path)
 
                 if (j%pas==0)
                 {
-                    s_offset+=EP.getData(IQ);
+                    double noi;
+                    noise >> noi;
+                    s_offset+=noi;
+                    //s_offset+=EP.getData(IQ);
                     s++;
                 }
             }
             j++;
         }
     }
+
+    noise.close();
+
     noise_file.close();
     s_offset/=s;
     EP.setOffset(s_offset);
@@ -120,7 +130,10 @@ void Processing::calibrate(QString pulse_path, QString noise_path)
 
                 if (j%pas==0)
                 {
-                    EP.setInput(EP.getData(IQ));
+                    double in;
+                    pulse >> in;
+                    EP.setInput(in);
+                    //EP.setInput(EP.getData(IQ));
                     EP.recordImpulseResponse();
                 }
             }
@@ -129,6 +142,9 @@ void Processing::calibrate(QString pulse_path, QString noise_path)
     }
     EP.setRecording();
     pulse_file.close();
+
+    pulse.close();
+    noise.open("Noise.txt",std::ios::in);
 
     // Record noise for IR
     noise_file.open(noise_path.toStdString(), std::ios::in|std::ios::binary);
@@ -173,7 +189,10 @@ void Processing::calibrate(QString pulse_path, QString noise_path)
 
                 if (j%pas==0)
                 {
-                    EP.setInput(EP.getData(IQ));
+                    double in;
+                    noise >> in;
+                    EP.setInput(in);
+                    //EP.setInput(EP.getData(IQ));
                     EP.recordImpulseResponse();
                 }
             }
@@ -182,6 +201,9 @@ void Processing::calibrate(QString pulse_path, QString noise_path)
     }
     EP.setRecording();
     noise_file.close();
+
+    noise.close();
+    pulse.close();
 
     //Compute IR
     EP.computeImpulseResponse();
