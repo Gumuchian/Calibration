@@ -28,7 +28,7 @@ void Processing::calibrate(QString pulse_path, QString noise_path)
     //Set offset
     char IQ[4];
     int j=0,s=0,Npix=41,pas=(Npix+2)*2;
-    double s_offset=0;
+    double s_offset=0,var_noise=0;
     bool start=true;
     noise_file.open(noise_path.toStdString(), std::ios::in|std::ios::binary);
     noise_file.seekg(0, std::ios::end);
@@ -85,6 +85,57 @@ void Processing::calibrate(QString pulse_path, QString noise_path)
     noise_file.close();
     s_offset/=s;
     EP.setOffset(s_offset);
+
+    //Get noise threshold
+    noise.open("Noise.txt",std::ios::in);
+    noise_file.open(noise_path.toStdString(), std::ios::in|std::ios::binary);
+    noise_file >> std::noskipws;
+
+    while(j<size/4)
+    {
+        if((int)(((unsigned char)IQ[1]*256 + (unsigned char)IQ[0]))!=56026 && start)
+        {
+            noise_file >> IQ[0];
+            noise_file >> IQ[1];
+        }
+        else
+        {
+            start=false;
+            if (j==0)
+            {
+                noise_file >> IQ[0];
+                noise_file >> IQ[1];
+                for (int i=0;i<Npix+1;i++)
+                {
+                    noise_file >> IQ[0];
+                    noise_file >> IQ[1];
+                    noise_file >> IQ[2];
+                    noise_file >> IQ[3];
+                }
+            }
+            else
+            {
+                for (int i=0;i<4;i++)
+                {
+                    noise_file >> IQ[i];
+                }
+
+                if (j%pas==0)
+                {
+                    double noi;
+                    noise >> noi;
+                    var_noise+=pow(noi-s_offset,2);
+                    //s_offset+=EP.getData(IQ);
+                }
+            }
+            j++;
+        }
+    }
+
+    noise.close();
+
+    noise_file.close();
+    var_noise=sqrt(var_noise/s);
 
     // Record pulse for IR
     pulse_file.open(pulse_path.toStdString(), std::ios::in|std::ios::binary);
@@ -156,7 +207,7 @@ void Processing::calibrate(QString pulse_path, QString noise_path)
     noise_file >> std::noskipws;
 
     EP.setMode(false);
-    EP.setThreshold(0);
+    EP.setThreshold(var_noise*2.6);
     j=0;
     while(j<size)
     {
