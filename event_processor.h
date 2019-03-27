@@ -18,6 +18,7 @@ class Event_Processor
         Event_Processor(int Npattern);
         virtual ~Event_Processor();
         void trigger_function();
+        void store_noise();
         void computeOptimalFilter();
         void computeFit();
         void computeEventProcessor();

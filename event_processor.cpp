@@ -96,6 +96,32 @@ void Event_Processor::trigger_function()
     index = index%200;
 }
 
+void Event_Processor::store_noise()
+{
+    Trigger_output = offset - Buffer(index);
+    if (!recording && ReadyToCompute)
+    {
+        ReadyToCompute = false;
+    }
+    if (!recording && !ReadyToCompute)
+    {
+        recording = true;
+    }
+    if (recording)
+    {
+        Record(counter) = offset - Buffer((index+1)%200);
+        counter++;
+        if (counter == RecordSize+2)
+        {
+            recording = false;
+            ReadyToCompute = true;
+            counter = 0;
+        }
+    }
+    index ++;
+    index = index%200;
+}
+
 void Event_Processor::computeOptimalFilter()
 {
     for(int i=0;i<3;i++)
@@ -154,21 +180,25 @@ void Event_Processor::setImpulseResponse(vector<double> IR)
 
 void Event_Processor::recordImpulseResponse()
 {
-    trigger_function();
-    if (ReadyToCompute)
+    CArray module(RecordSize);
+    Complex c[RecordSize];
+    for (int i=0;i<RecordSize;i++)
     {
-        CArray module(RecordSize);
-        Complex c[RecordSize];
-        for (int i=0;i<RecordSize;i++)
-        {
-            c[i]=Record(i+1);
-            module[i]=c[i];
-        }
-        if (mode)
+        c[i]=Record(i+1);
+        module[i]=c[i];
+    }
+    if (mode)
+    {
+        trigger_function();
+        if (ReadyToCompute)
         {
             pulse_fft+=module;
         }
-        else
+    }
+    else
+    {
+        store_noise();
+        if (ReadyToCompute)
         {
             fft(module);
             noise_fft+=pow(abs(module),2);
@@ -181,7 +211,7 @@ void Event_Processor::computeImpulseResponse()
     fft(pulse_fft);
     IR = pulse_fft/noise_fft;
 
-    std::fstream file_noise,file_pulse,IR_file;
+    std::fstream file_noise,file_pulse;
     file_noise.open("Noise_spectrum.txt",std::ios::out);
     file_pulse.open("Pulse_spectrum.txt",std::ios::out);
     ifft(IR);
