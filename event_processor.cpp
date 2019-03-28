@@ -209,6 +209,7 @@ void Event_Processor::recordImpulseResponse()
 void Event_Processor::computeImpulseResponse()
 {
     fft(pulse_fft);
+    pulse_fft[0]=0;
     IR = pulse_fft/noise_fft;
 
     std::fstream file_noise,file_pulse;
@@ -336,3 +337,12 @@ double Event_Processor::getData(char buffer[])
     return sqrt(pow(I,2)+pow(Q,2));
 }
 
+double Event_Processor::computeMean()
+{
+    double sum=0;
+    for (int i=0;i<200;i++)
+    {
+        sum+=Record(i);
+    }
+    return sum/200.0;
+}
