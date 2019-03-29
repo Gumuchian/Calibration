@@ -62,6 +62,10 @@ Event_Processor::~Event_Processor()
 
 void Event_Processor::trigger_function()
 {
+    if (!recording)
+    {
+        offset=computeMean();
+    }
     Trigger_output = offset - Buffer(index);
     if (!recording && ReadyToCompute)
     {
@@ -342,7 +346,7 @@ double Event_Processor::computeMean()
     double sum=0;
     for (int i=0;i<200;i++)
     {
-        sum+=Record(i);
+        sum+=Buffer(i);
     }
     return sum/200.0;
 }
