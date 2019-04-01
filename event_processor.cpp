@@ -27,7 +27,7 @@ Event_Processor::Event_Processor(int Npattern):Trigger_coeff(8,0),Buffer(200,0),
     ReadyToCompute = false;
     corr_coeff(0)=0;
     corr_coeff(1)=0;
-    corr_coeff(2)=7000;
+    corr_coeff(2)=7000.0;
     for (int k=0;k<8;k++)
     {
         if (k<4)
@@ -39,7 +39,7 @@ Event_Processor::Event_Processor(int Npattern):Trigger_coeff(8,0),Buffer(200,0),
             Trigger_coeff(k) = 1;
         }
     }
-    matrix<double> X(3,3);
+    matrix<double> X(3,3),Xp(3,3);
     for (int i=0;i<3;i++)
     {
         for (int j=0;j<3;j++)
@@ -47,7 +47,9 @@ Event_Processor::Event_Processor(int Npattern):Trigger_coeff(8,0),Buffer(200,0),
             X(i,j)=pow(i-3/2,2-j);
         }
     }
-    InvertMatrix(X,Z);
+    Xp=prod(X,trans(X));
+    InvertMatrix(Xp,Z);
+    Z=prod(trans(X),Z);
     for (int k=0;k<Npattern;k++)
     {
         pulse_fft[k]=0;
@@ -87,7 +89,7 @@ void Event_Processor::trigger_function()
     if (recording)
     {
         Record(counter) = offset - Buffer((index+1)%200);
-        counter++;       
+        counter++;
         if (counter == RecordSize+2)
         {
             recording = false;
@@ -137,7 +139,7 @@ void Event_Processor::computeOptimalFilter()
 void Event_Processor::computeFit()
 {
     Poly_coeff=prod(Z,OutputFilter);
-    energy=7000.0*(Poly_coeff(2)-pow(Poly_coeff(1),2)/(2*Poly_coeff(0)))/factor;
+    energy=7000.0*(Poly_coeff(2)-pow(Poly_coeff(1),2)/(4*Poly_coeff(0)))/factor;
     t0=-Poly_coeff(1)/(2*Poly_coeff(0));
     energy/=(corr_coeff(0)*pow(t0,2)+corr_coeff(1)*t0+corr_coeff(2))/7000.0;
 }

@@ -406,9 +406,11 @@ void Processing::calibrate(QString pulse_path, QString noise_path)
             T(i,j)=pow(t0[i],2-j);
         }
     }
-    Tin=prod(trans(T),T);
+
+    Tin=prod(T,trans(T));
     EP.InvertMatrix(Tin,Tinv);
-    coeff=prod(prod(Tinv,trans(T)),trans(E));
+    Tinv=prod(trans(T),Tinv);
+    coeff=prod(Tinv,E);
     save_f.open("Factor.txt",std::ios::out|std::ios::app);
     for (int i=0;i<3;i++)
     {
