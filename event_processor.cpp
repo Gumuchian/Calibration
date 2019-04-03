@@ -237,7 +237,7 @@ void Event_Processor::recordFactor()
     trigger_function();
     if (ReadyToCompute)
     {
-        factor_count+=1;
+        factor_count++;
         computeOptimalFilter();
         factor+=OutputFilter(1);
     }
