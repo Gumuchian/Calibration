@@ -23,7 +23,7 @@ void Processing::calibrate(QString pulse_path, QString noise_path)
 
     std::string str;
     std::fstream pulse_file,noise_file,save_RI,save_f;
-    std::vector<double> energy,t0;
+    std::vector<double> energy,t0,off;
 
     //Set offset
     char IQ[4];
@@ -334,6 +334,7 @@ void Processing::calibrate(QString pulse_path, QString noise_path)
     pulse_file.close();
     pulse.close();
 
+
     //Compute factor
     EP.computeFactor();
     save_f.open("Factor.txt",std::ios::out);
@@ -341,6 +342,111 @@ void Processing::calibrate(QString pulse_path, QString noise_path)
     save_f.close();
 
 
+    //Compute Offset/Energy correlation
+    pulse.open("Pulse.txt",std::ios::in);
+    pulse_file.open(pulse_path.toStdString(), std::ios::in|std::ios::binary);
+    pulse_file.seekg(0, std::ios::end);
+    size = pulse_file.tellg()/4;
+    pulse_file.close();
+
+    pulse_file.open(pulse_path.toStdString(), std::ios::in|std::ios::binary);
+    pulse_file >> std::noskipws;
+    j=0;
+    start=true;
+    while(j<size)
+    {
+        if((int)(((unsigned char)IQ[1]*256 + (unsigned char)IQ[0]))!=56026 && start)
+        {
+            pulse_file >> IQ[0];
+            pulse_file >> IQ[1];
+        }
+        else
+        {
+            start=false;
+            if (j==0)
+            {
+                pulse_file >> IQ[0];
+                pulse_file >> IQ[1];
+                for (int i=0;i<Npix+1;i++)
+                {
+                    pulse_file >> IQ[0];
+                    pulse_file >> IQ[1];
+                    pulse_file >> IQ[2];
+                    pulse_file >> IQ[3];
+                }
+            }
+            else
+            {
+                for (int i=0;i<4;i++)
+                {
+                    pulse_file >> IQ[i];
+                }
+
+                if (j%pas==0)
+                {
+                    double in;
+                    pulse >> in;
+                    EP.setInput(in);
+                    EP.computeEventProcessor();
+                    if (EP.getRecording())
+                    {
+                        energy.push_back(EP.getEnergy());
+                        off.push_back(EP.getOffset());
+                    }
+                }
+            }
+            j++;
+        }
+    }
+    EP.setRecording();
+    pulse_file.close();
+    pulse.close();
+
+
+    std::fstream file_o;
+    file_o.open("offset_energy.txt",std::ios::out);
+    for (int i=0;i<(int)energy.size();i++)
+    {
+        file_o << energy[i] << "\t" << off[i] << std::endl;
+    }
+    file_o.close();
+
+    std::fstream ff;
+    ff.open("Quuuuu.txt",std::ios::out);
+    vector<double> AB(2),coeff(2,0);
+    matrix<double> Mlin(2,2),Mlin_inv;
+    double m00=0,m10=0,A=0,B=0,det;
+    for (int i=0;i<(int)energy.size();i++)
+    {
+        m00+=pow(off[i]/10000.0,2);
+        m10+=off[i]/10000.0;
+        A+=energy[i]*off[i]/10000.0;
+        B+=energy[i];
+    }
+    Mlin(0,0)=m00;
+    Mlin(0,1)=m10;
+    Mlin(1,0)=m10;
+    Mlin(1,1)=(double)energy.size();
+    det=1.0/(Mlin(0,0)*Mlin(1,1)-Mlin(1,0)*Mlin(0,1));
+    ff << m00 << "\t" << m10 << "\t" << A << "\t" << B << "\t" << det << Mlin(1,1) << std::endl;
+    ff.close();
+    Mlin_inv(0,0)=det*Mlin(1,1);
+    Mlin_inv(0,1)=-det*Mlin(0,1);
+    Mlin_inv(1,0)=-det*Mlin(1,0);
+    Mlin_inv(1,1)=det*Mlin(0,0);
+    AB(0)=A;
+    AB(1)=B;
+    coeff=prod(Mlin_inv,AB);
+
+    save_f.open("Factor.txt",std::ios::out|std::ios::app);
+    for (int i=0;i<2;i++)
+    {
+        save_f << coeff(i) << std::endl;
+    }
+    save_f.close();
+
+    EP.setCorr_coeff(coeff);
+   /*
     //E=f(t0)
     pulse.open("Pulse.txt",std::ios::in);
 
@@ -416,9 +522,9 @@ void Processing::calibrate(QString pulse_path, QString noise_path)
         save_f << coeff(i) << std::endl;
     }
     save_f.close();
-
+    */
     std::fstream file,file_s;
-    std::vector<double> ener;
+    std::vector<double> ener,offf;
     EP.setRecording();
     file.open("Measure.txt",std::ios::in);
     for (int i=0;i<5220914;i++)
@@ -430,13 +536,14 @@ void Processing::calibrate(QString pulse_path, QString noise_path)
         if (EP.getRecording())
         {
             ener.push_back(EP.getEnergy());
+            offf.push_back(EP.getOffset());
         }
     }
     file.close();
     file_s.open("List_energies.txt",std::ios::out);
     for (int i=0;i<(int)ener.size();i++)
     {
-        file_s << ener[i] << std::endl;
+        file_s << ener[i] << "\t" << offf[i] << std::endl;
     }
     file_s.close();
 }

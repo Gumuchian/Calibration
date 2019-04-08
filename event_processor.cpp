@@ -13,7 +13,7 @@ Event_Processor::Event_Processor()
 
 }
 
-Event_Processor::Event_Processor(int Npattern):Trigger_coeff(8,0),Buffer(200,0),corr_coeff(3,0),Record(Npattern+2,0),OutputFilter(3,0),ImpulseResponse(Npattern,0),Z(3,3),pulse_fft(Npattern),noise_fft(Npattern),pulse_phase(Npattern),IR(Npattern)
+Event_Processor::Event_Processor(int Npattern):Trigger_coeff(8,0),Buffer(200,0),corr_coeff(2,0),Record(Npattern+2,0),OutputFilter(3,0),ImpulseResponse(Npattern,0),Z(3,3),pulse_fft(Npattern),noise_fft(Npattern),pulse_phase(Npattern),IR(Npattern)
 {
     index = 0;
     counter = 0;
@@ -26,8 +26,9 @@ Event_Processor::Event_Processor(int Npattern):Trigger_coeff(8,0),Buffer(200,0),
     recording = false;
     ReadyToCompute = false;
     corr_coeff(0)=0;
-    corr_coeff(1)=0;
-    corr_coeff(2)=7000.0;
+    corr_coeff(1)=7000;
+    //corr_coeff(1)=0;
+    //corr_coeff(2)=7000.0;
     for (int k=0;k<8;k++)
     {
         if (k<4)
@@ -68,27 +69,27 @@ void Event_Processor::trigger_function()
     {
         offset=computeMean();
     }
-    Trigger_output = offset - Buffer(index);
+    Trigger_output = - Buffer(index);
     if (!recording && ReadyToCompute)
     {
         ReadyToCompute = false;
     }
-    if (std::abs(Trigger_output) > Threshold && count == 0)
+    if (std::abs(offset+Trigger_output) > Threshold && count == 0)
     {
         wait = true;
     }
-    if (wait && std::abs(Trigger_output) < Threshold)
+    if (wait && std::abs(offset+Trigger_output) < Threshold)
     {
         wait = false;
     }
     count ++;
-    if (std::abs(Trigger_output) > Threshold && !wait)
+    if (std::abs(offset+Trigger_output) > Threshold && !wait)
     {
         recording = true;
     }
     if (recording)
     {
-        Record(counter) = offset - Buffer((index+1)%200);
+        Record(counter) = - Buffer((index+1)%200);
         counter++;
         if (counter == RecordSize+2)
         {
@@ -104,7 +105,7 @@ void Event_Processor::trigger_function()
 
 void Event_Processor::store_noise()
 {
-    Trigger_output = offset - Buffer(index);
+    Trigger_output = Buffer(index);
     if (!recording && ReadyToCompute)
     {
         ReadyToCompute = false;
@@ -115,7 +116,7 @@ void Event_Processor::store_noise()
     }
     if (recording)
     {
-        Record(counter) = offset - Buffer((index+1)%200);
+        Record(counter) = Buffer((index+1)%200);
         counter++;
         if (counter == RecordSize+2)
         {
@@ -141,7 +142,8 @@ void Event_Processor::computeFit()
     Poly_coeff=prod(Z,OutputFilter);
     energy=7000.0*(Poly_coeff(2)-pow(Poly_coeff(1),2)/(4*Poly_coeff(0)))/factor;
     t0=-Poly_coeff(1)/(2*Poly_coeff(0));
-    energy/=(corr_coeff(0)*pow(t0,2)+corr_coeff(1)*t0+corr_coeff(2))/7000.0;
+    //energy/=(corr_coeff(0)*pow(offset,2)+corr_coeff(1)*offset+corr_coeff(2))/7000.0;
+    energy/=(corr_coeff(0)*offset/10000.0+corr_coeff(1))/7000.0;
 }
 
 void Event_Processor::setInput(double input)
@@ -314,6 +316,11 @@ double Event_Processor::gett0()
     return t0;
 }
 
+double Event_Processor::getOffset()
+{
+    return offset;
+}
+
 void Event_Processor::setOffset(double off)
 {
     offset=off;
@@ -321,7 +328,7 @@ void Event_Processor::setOffset(double off)
 
 void Event_Processor::setCorr_coeff(vector<double> v)
 {
-    for (int i=0;i<3;i++)
+    for (int i=0;i<(int)corr_coeff.size();i++)
     {
         corr_coeff(i)=v(i);
     }

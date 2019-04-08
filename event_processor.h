@@ -42,6 +42,7 @@ class Event_Processor
         void computeFactor();
         double getFactor();
         double gett0();
+        double getOffset();
         void setOffset(double off);
         void setCorr_coeff(vector<double> v);
         double computeMean();
