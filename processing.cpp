@@ -413,9 +413,9 @@ void Processing::calibrate(QString pulse_path, QString noise_path)
 
     std::fstream ff;
     ff.open("Quuuuu.txt",std::ios::out);
-    vector<double> AB(2),coeff(2,0);
-    matrix<double> Mlin(2,2),Mlin_inv;
-    double m00=0,m10=0,A=0,B=0,det;
+    vector<double> AB(2),coeff(2);
+    matrix<double> M(2,2);
+    double m00=0,m10=0,A=0,B=0,M_det=0;
     for (int i=0;i<(int)energy.size();i++)
     {
         m00+=pow(off[i]/10000.0,2);
@@ -423,20 +423,16 @@ void Processing::calibrate(QString pulse_path, QString noise_path)
         A+=energy[i]*off[i]/10000.0;
         B+=energy[i];
     }
-    Mlin(0,0)=m00;
-    Mlin(0,1)=m10;
-    Mlin(1,0)=m10;
-    Mlin(1,1)=(double)energy.size();
-    det=1.0/(Mlin(0,0)*Mlin(1,1)-Mlin(1,0)*Mlin(0,1));
-    ff << m00 << "\t" << m10 << "\t" << A << "\t" << B << "\t" << det << Mlin(1,1) << std::endl;
+    M_det=(m00*((double)energy.size())-m10*m10);
+    M(0,0)=(1.0/M_det)*(double)energy.size();
+    M(0,1)=-(1.0/M_det)*m10;
+    M(1,0)=-(1.0/M_det)*m10;
+    M(1,1)=(1.0/M_det)*m00;
+    ff << M_det << "\t" << (double)M(0,0) << "\t" << (double)M(0,1) << "\t" << (double)M(1,0) << "\t" << (double)M(1,1) << std::endl;
     ff.close();
-    Mlin_inv(0,0)=det*Mlin(1,1);
-    Mlin_inv(0,1)=-det*Mlin(0,1);
-    Mlin_inv(1,0)=-det*Mlin(1,0);
-    Mlin_inv(1,1)=det*Mlin(0,0);
     AB(0)=A;
     AB(1)=B;
-    coeff=prod(Mlin_inv,AB);
+    coeff=prod(M,AB);
 
     save_f.open("Factor.txt",std::ios::out|std::ios::app);
     for (int i=0;i<2;i++)
