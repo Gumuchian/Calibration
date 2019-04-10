@@ -143,7 +143,7 @@ void Event_Processor::computeFit()
     energy=7000.0*(Poly_coeff(2)-pow(Poly_coeff(1),2)/(4*Poly_coeff(0)))/factor;
     t0=-Poly_coeff(1)/(2*Poly_coeff(0));
     //energy/=(corr_coeff(0)*pow(offset,2)+corr_coeff(1)*offset+corr_coeff(2))/7000.0;
-    energy-=(corr_coeff(0)*offset/10000.0+corr_coeff(1))-7000.0;
+    energy-=corr_coeff(0)*(offset-mean_offset)/10000.0;
 }
 
 void Event_Processor::setInput(double input)
@@ -323,7 +323,7 @@ double Event_Processor::getOffset()
 
 void Event_Processor::setOffset(double off)
 {
-    offset=off;
+    mean_offset=off;
 }
 
 void Event_Processor::setCorr_coeff(vector<double> v)

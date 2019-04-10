@@ -67,6 +67,7 @@ class Event_Processor
         double factor;
         double energy;
         double offset;
+        double mean_offset;
         double t0;
         matrix<double> Z;
         int noise_size;

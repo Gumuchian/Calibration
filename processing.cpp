@@ -267,10 +267,15 @@ void Processing::calibrate(QString pulse_path, QString noise_path)
     vector<double> IR(N);
     OF = EP.getIR();
     save_RI.open("Pattern.txt",std::ios::out);
+    std::fstream fff;
+    fff.open("Pat.txt",std::ios::in);
     for (int i=0;i<N;i++)
     {
         save_RI << real(OF[i]) << std::endl;
         IR(i)=real(OF[i]);
+        double in;
+        fff >> in;
+        IR(i)=in;
     }
     save_RI.close();
     EP.setImpulseResponse(IR);
@@ -411,30 +416,29 @@ void Processing::calibrate(QString pulse_path, QString noise_path)
     }
     file_o.close();
 
-    std::fstream ff;
-    ff.open("Quuuuu.txt",std::ios::out);
     vector<double> AB(2),coeff(2);
     matrix<double> M(2,2);
-    double m00=0,m10=0,A=0,B=0,M_det=0;
+    double m00=0,m10=0,A=0,B=0,M_det=0,mean_offset=0;
     for (int i=0;i<(int)energy.size();i++)
     {
         m00+=pow(off[i]/10000.0,2);
         m10+=off[i]/10000.0;
         A+=energy[i]*off[i]/10000.0;
         B+=energy[i];
+        mean_offset+=off[i];
     }
+    mean_offset/=(double)energy.size();
     M_det=(m00*((double)energy.size())-m10*m10);
     M(0,0)=(1.0/M_det)*(double)energy.size();
     M(0,1)=-(1.0/M_det)*m10;
     M(1,0)=-(1.0/M_det)*m10;
     M(1,1)=(1.0/M_det)*m00;
-    ff << M_det << "\t" << (double)M(0,0) << "\t" << (double)M(0,1) << "\t" << (double)M(1,0) << "\t" << (double)M(1,1) << std::endl;
-    ff.close();
     AB(0)=A;
     AB(1)=B;
     coeff=prod(M,AB);
 
     save_f.open("Factor.txt",std::ios::out|std::ios::app);
+    save_f << mean_offset << std::endl;
     for (int i=0;i<2;i++)
     {
         save_f << coeff(i) << std::endl;
@@ -442,6 +446,7 @@ void Processing::calibrate(QString pulse_path, QString noise_path)
     save_f.close();
 
     EP.setCorr_coeff(coeff);
+    EP.setOffset(mean_offset);
    /*
     //E=f(t0)
     pulse.open("Pulse.txt",std::ios::in);
