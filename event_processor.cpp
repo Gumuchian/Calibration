@@ -13,7 +13,7 @@ Event_Processor::Event_Processor()
 
 }
 
-Event_Processor::Event_Processor(int Npattern):Trigger_coeff(8,0),Buffer(200,0),corr_coeff(2,0),Record(Npattern+2,0),OutputFilter(3,0),ImpulseResponse(Npattern,0),Z(3,3),pulse_fft(Npattern),noise_fft(Npattern),pulse_phase(Npattern),IR(Npattern)
+Event_Processor::Event_Processor(int Npattern):Trigger_coeff(8,0),Buffer(200,0),p_coeff(3,0),b_coeff(2,0),Record(Npattern+2,0),OutputFilter(3,0),ImpulseResponse(Npattern,0),Z(3,3),pulse_fft(Npattern),noise_fft(Npattern),pulse_phase(Npattern),IR(Npattern)
 {
     index = 0;
     counter = 0;
@@ -25,10 +25,10 @@ Event_Processor::Event_Processor(int Npattern):Trigger_coeff(8,0),Buffer(200,0),
     RecordSize = Npattern;
     recording = false;
     ReadyToCompute = false;
-    corr_coeff(0)=0;
-    corr_coeff(1)=7000;
-    //corr_coeff(1)=0;
-    //corr_coeff(2)=7000.0;
+    b_coeff(0)=0;
+    b_coeff(1)=7000;
+    p_coeff(0)=0;
+    p_coeff(1)=0;
     for (int k=0;k<8;k++)
     {
         if (k<4)
@@ -142,8 +142,8 @@ void Event_Processor::computeFit()
     Poly_coeff=prod(Z,OutputFilter);
     energy=7000.0*(Poly_coeff(2)-pow(Poly_coeff(1),2)/(4*Poly_coeff(0)))/factor;
     t0=-Poly_coeff(1)/(2*Poly_coeff(0));
-    //energy/=(corr_coeff(0)*pow(offset,2)+corr_coeff(1)*offset+corr_coeff(2))/7000.0;
-    energy-=corr_coeff(0)*(offset-mean_offset)/10000.0;
+    energy-=p_coeff(0)*pow(t0,2)+p_coeff(1)*t0-(p_coeff(0)*pow(t0_mean,2)+p_coeff(1)*t0_mean);
+    energy-=b_coeff(0)*(offset-mean_offset)/10000.0;
 }
 
 void Event_Processor::setInput(double input)
@@ -353,9 +353,9 @@ double Event_Processor::getData(char buffer[])
 double Event_Processor::computeMean()
 {
     double sum=0;
-    for (int i=0;i<200;i++)
+    for (int i=0;i<170;i++)
     {
-        sum+=Buffer(i);
+        sum+=Buffer((index+1+i)%200);
     }
-    return sum/200.0;
+    return sum/170.0;
 }

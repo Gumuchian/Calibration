@@ -57,7 +57,8 @@ class Event_Processor
         bool recording;
         vector<double> Trigger_coeff;
         vector<double> Buffer;
-        vector<double> corr_coeff;
+        vector<double> p_coeff;
+        vector<double> b_coeff;
         vector<double> Record;
         vector<double> OutputFilter;
         vector<double> ImpulseResponse;
@@ -68,6 +69,7 @@ class Event_Processor
         double energy;
         double offset;
         double mean_offset;
+        double t0_mean;
         double t0;
         matrix<double> Z;
         int noise_size;
