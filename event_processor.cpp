@@ -1,4 +1,4 @@
- #include "event_processor.h"
+#include "event_processor.h"
 #include <boost/numeric/ublas/matrix.hpp>
 #include <boost/numeric/ublas/lu.hpp>
 #include <boost/numeric/ublas/io.hpp>
@@ -326,11 +326,24 @@ void Event_Processor::setOffset(double off)
     mean_offset=off;
 }
 
-void Event_Processor::setCorr_coeff(vector<double> v)
+void Event_Processor::setPhase(double phase)
 {
-    for (int i=0;i<(int)corr_coeff.size();i++)
+    t0_mean=phase;
+}
+
+void Event_Processor::setP_coeff(vector<double> v)
+{
+    for (int i=0;i<(int)p_coeff.size();i++)
     {
-        corr_coeff(i)=v(i);
+        p_coeff(i)=v(i);
+    }
+}
+
+void Event_Processor::setB_coeff(vector<double> v)
+{
+    for (int i=0;i<(int)b_coeff.size();i++)
+    {
+        b_coeff(i)=v(i);
     }
 }
 

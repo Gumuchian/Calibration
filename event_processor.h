@@ -44,7 +44,9 @@ class Event_Processor
         double gett0();
         double getOffset();
         void setOffset(double off);
-        void setCorr_coeff(vector<double> v);
+        void setPhase(double phase);
+        void setP_coeff(vector<double> v);
+        void setB_coeff(vector<double> v);
         double computeMean();
 
     private:
