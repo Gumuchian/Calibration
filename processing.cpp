@@ -351,6 +351,7 @@ void Processing::calibrate(QString pulse_path, QString noise_path)
     {
         save_f << coeff(i) << std::endl;
     }
+    save_f << mean_offset << std::endl;
     save_f.close();
 
     EP.setB_coeff(coeff);
@@ -407,7 +408,6 @@ void Processing::calibrate(QString pulse_path, QString noise_path)
         }
     }
     pulse_file.close();
-    pulse.close();
 
     vector<double> E((int)energy_p.size()),p_coeff(3);
     matrix<double> T((int)energy_p.size(),3),Tinv(3,3),Tin(3,3);
@@ -431,6 +431,7 @@ void Processing::calibrate(QString pulse_path, QString noise_path)
     {
         save_f << p_coeff(i) << std::endl;
     }
+    save_f << mean_phase << std::endl;
     save_f.close();
 
     EP.setP_coeff(p_coeff);
