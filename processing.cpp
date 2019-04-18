@@ -19,7 +19,7 @@ void Processing::calibrate(QString pulse_path, QString noise_path)
 {
     std::string str;
     std::fstream pulse_file,noise_file,save_RI,save_f;
-    std::vector<double> energy,t0,off;
+    std::vector<double> energy_p,energy_b,t0,off;
 
 
     //Set offset
@@ -78,6 +78,7 @@ void Processing::calibrate(QString pulse_path, QString noise_path)
     EP.setOffset(s_offset);
 
 
+
     // Record pulse for IR
     pulse_file.open(pulse_path.toStdString(), std::ios::in|std::ios::binary);
     pulse_file.seekg(0, std::ios::end);
@@ -131,6 +132,7 @@ void Processing::calibrate(QString pulse_path, QString noise_path)
     }
     EP.setRecording();
     pulse_file.close();
+
 
 
     // Record noise for IR
@@ -204,6 +206,7 @@ void Processing::calibrate(QString pulse_path, QString noise_path)
     EP.setRecording();
 
 
+
     //Record factor
     pulse_file.open(pulse_path.toStdString(), std::ios::in|std::ios::binary);
     pulse_file.seekg(0, std::ios::end);
@@ -263,6 +266,7 @@ void Processing::calibrate(QString pulse_path, QString noise_path)
     save_f.close();
 
 
+
     //Compute baseline-energy correlation
     pulse_file.open(pulse_path.toStdString(), std::ios::in|std::ios::binary);
     pulse_file.seekg(0, std::ios::end);
@@ -304,10 +308,11 @@ void Processing::calibrate(QString pulse_path, QString noise_path)
 
                 if (j%pas==0)
                 {
+                    EP.setInput(EP.getData(IQ));
                     EP.computeEventProcessor();
                     if (EP.getRecording())
                     {
-                        energy.push_back(EP.getEnergy());
+                        energy_b.push_back(EP.getEnergy());
                         off.push_back(EP.getOffset());
                     }
                 }
@@ -322,17 +327,17 @@ void Processing::calibrate(QString pulse_path, QString noise_path)
     vector<double> AB(2),coeff(2);
     matrix<double> M(2,2);
     double m00=0,m10=0,A=0,B=0,M_det=0,mean_offset=0;
-    for (int i=0;i<(int)energy.size();i++)
+    for (int i=0;i<(int)energy_b.size();i++)
     {
         m00+=pow(off[i]/10000.0,2);
         m10+=off[i]/10000.0;
-        A+=energy[i]*off[i]/10000.0;
-        B+=energy[i];
+        A+=energy_b[i]*off[i]/10000.0;
+        B+=energy_b[i];
         mean_offset+=off[i];
     }
-    mean_offset/=(double)energy.size();
-    M_det=(m00*((double)energy.size())-m10*m10);
-    M(0,0)=(1.0/M_det)*(double)energy.size();
+    mean_offset/=(double)energy_b.size();
+    M_det=(m00*((double)energy_b.size())-m10*m10);
+    M(0,0)=(1.0/M_det)*(double)energy_b.size();
     M(0,1)=-(1.0/M_det)*m10;
     M(1,0)=-(1.0/M_det)*m10;
     M(1,1)=(1.0/M_det)*m00;
@@ -350,6 +355,7 @@ void Processing::calibrate(QString pulse_path, QString noise_path)
 
     EP.setB_coeff(coeff);
     EP.setOffset(mean_offset);
+
 
 
     //E=f(t0)
@@ -392,7 +398,7 @@ void Processing::calibrate(QString pulse_path, QString noise_path)
                     EP.computeEventProcessor();
                     if (EP.getRecording())
                     {
-                        energy.push_back(EP.getEnergy());
+                        energy_p.push_back(EP.getEnergy());
                         t0.push_back(EP.gett0());
                     }
                 }
@@ -401,14 +407,15 @@ void Processing::calibrate(QString pulse_path, QString noise_path)
         }
     }
     pulse_file.close();
+    pulse.close();
 
-    vector<double> E((int)energy.size()),p_coeff(3);
-    matrix<double> T((int)energy.size(),3),Tinv(3,3),Tin(3,3);
+    vector<double> E((int)energy_p.size()),p_coeff(3);
+    matrix<double> T((int)energy_p.size(),3),Tinv(3,3),Tin(3,3);
     double mean_phase=0;
-    for (int i=0;i<(int)energy.size();i++)
+    for (int i=0;i<(int)energy_p.size();i++)
     {
         mean_phase+=t0[i];
-        E(i)=energy[i];
+        E(i)=energy_p[i];
         for (int j=0;j<3;j++)
         {
             T(i,j)=pow(t0[i],2-j);
