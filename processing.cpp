@@ -146,6 +146,7 @@ void Processing::calibrate(QString pulse_path, QString noise_path)
 
     EP.setMode(false);
     j=0;
+    start=true;
     while(j<size)
     {
         if((int)(((unsigned char)IQ[1]*256 + (unsigned char)IQ[0]))!=56026 && start)
