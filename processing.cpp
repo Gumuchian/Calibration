@@ -352,7 +352,6 @@ void Processing::calibrate(QString pulse_path, QString noise_path)
     {
         save_f << coeff(i) << std::endl;
     }
-    save_f << mean_offset << std::endl;
     save_f.close();
 
     EP.setB_coeff(coeff);
