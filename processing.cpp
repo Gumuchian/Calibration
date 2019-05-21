@@ -31,7 +31,7 @@ void Processing::calibrate(QString pulse_path, QString noise_path)
     noise_file.seekg(0, std::ios::end);
     int size = noise_file.tellg();
     noise_file.close();
-
+/*
     noise_file.open(noise_path.toStdString(), std::ios::in|std::ios::binary);
     noise_file >> std::noskipws;
 
@@ -442,22 +442,22 @@ void Processing::calibrate(QString pulse_path, QString noise_path)
 
 
 
-
     // Observations
 
     std::fstream file,file_s,file_o;
-    file.open("dump_dre_20190520-174807.dat", std::ios::in|std::ios::binary);
+    file.open("dump_dre_20190521-160117.dat", std::ios::in|std::ios::binary);
     file.seekg(0, std::ios::end);
     size = file.tellg()/4;
     file.close();
 
-    file.open(pulse_path.toStdString(), std::ios::in|std::ios::binary);
+    file.open("dump_dre_20190521-160117.dat", std::ios::in|std::ios::binary);
     file >> std::noskipws;
 
     file_o.open("hein.txt",std::ios::out);
+
     std::vector<double> ener,offf;
     EP.setRecording();
-    EP.setThreshold(500);
+    EP.setThreshold(thres);
     j=0;
     start=true;
     while(j<size)
@@ -491,8 +491,75 @@ void Processing::calibrate(QString pulse_path, QString noise_path)
 
                 if (j%pas==0)
                 {
-                    file_o << EP.getData(IQ) << std::endl;
-                    EP.setInput(EP.getData(IQ));
+                    double in;
+                    in = EP.getData(IQ);
+                    file_o << in << std::endl;
+                    EP.setInput(in);
+                    EP.computeEventProcessor();
+                    if (EP.getRecording())
+                    {
+                        ener.push_back(EP.getEnergy());
+                        offf.push_back(EP.getOffset());
+                    }
+                }
+            }
+            j++;
+        }
+    }
+    file.close();
+    file_o.close();*/
+
+    std::fstream file,file_s,file_o;
+    file.open("dump_dre_20190521-160117.dat", std::ios::in|std::ios::binary);
+    file.seekg(0, std::ios::end);
+    size = file.tellg()/4;
+    file.close();
+
+    file.open("dump_dre_20190521-160117.dat", std::ios::in|std::ios::binary);
+    file >> std::noskipws;
+
+    file_o.open("hein.txt",std::ios::out);
+
+    std::vector<double> ener,offf;
+    EP.setRecording();
+    EP.setThreshold(thres);
+    j=0;
+    start=true;
+    while(j<size)
+    {
+        while((int)(((unsigned char)IQ[1]*256 + (unsigned char)IQ[0]))!=56026 && start)
+        {
+            file >> IQ[0];
+            file >> IQ[1];
+        }
+        else
+        {
+            start=false;
+            if (j==0)
+            {
+                file >> IQ[0];
+                file >> IQ[1];
+                for (int i=0;i<Npix+1;i++)
+                {
+                    file >> IQ[0];
+                    file >> IQ[1];
+                    file >> IQ[2];
+                    file >> IQ[3];
+                }
+            }
+            else
+            {
+                for (int i=0;i<4;i++)
+                {
+                    file >> IQ[i];
+                }
+
+                if (j%pas==0)
+                {
+                    double in;
+                    in = EP.getData(IQ);
+                    file_o << in << std::endl;
+                    EP.setInput(in);
                     EP.computeEventProcessor();
                     if (EP.getRecording())
                     {
@@ -507,10 +574,10 @@ void Processing::calibrate(QString pulse_path, QString noise_path)
     file.close();
     file_o.close();
 
-        file_s.open("List_energies.txt",std::ios::out);
-        for (int i=0;i<(int)ener.size();i++)
-        {
-            file_s << ener[i] << "\t" << offf[i] << std::endl;
-        }
-        file_s.close();
+    file_s.open("List_energies.txt",std::ios::out);
+    for (int i=0;i<(int)ener.size();i++)
+    {
+        file_s << ener[i] << "\t" << offf[i] << std::endl;
+    }
+    file_s.close();
 }
