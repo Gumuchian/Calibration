@@ -166,6 +166,7 @@ void Processing::calibrate(QString pulse_path, QString noise_path)
     pulse_file.close();
 
 
+    
     //Compute factor
     EP.computeFactor();
     save_f.open("Factor.txt",std::ios::out);
