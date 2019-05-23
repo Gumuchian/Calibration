@@ -28,12 +28,12 @@ void Processing::calibrate(QString pulse_path, QString noise_path)
 
     noise_file.open(noise_path.toStdString(), std::ios::in|std::ios::binary);
     noise_file.seekg(0, std::ios::end);
-    int size = noise_file.tellg();
+    long long size = noise_file.tellg();
     noise_file.close();
     noise_file.open(noise_path.toStdString(), std::ios::in|std::ios::binary);
     noise_file >> std::noskipws;
 
-    long current_position=0;
+    long long current_position=0;
     while(str[0]!=(char)0xda || str[1]!=(char)0xda || str[2]!=(char)0x80 || str[3]!=(char)0x2a)
     {
         ++current_position;
@@ -41,7 +41,7 @@ void Processing::calibrate(QString pulse_path, QString noise_path)
         noise_file.read(str,4);
     }
     current_position+=168;
-    while(current_position < (long)size)
+    while(current_position < size)
     {
 
         noise_file.seekg(current_position);
@@ -75,7 +75,7 @@ void Processing::calibrate(QString pulse_path, QString noise_path)
         pulse_file.read(str,4);
     }
     current_position+=168;
-    while(current_position < (long)size)
+    while(current_position < size)
     {
         pulse_file.seekg(current_position);
         pulse_file.read(str,4);
@@ -106,7 +106,7 @@ void Processing::calibrate(QString pulse_path, QString noise_path)
         noise_file.read(str,4);
     }
     current_position+=168;
-    while(current_position < (long)size)
+    while(current_position < size)
     {
 
         noise_file.seekg(current_position);
@@ -153,7 +153,7 @@ void Processing::calibrate(QString pulse_path, QString noise_path)
         pulse_file.read(str,4);
     }
     current_position+=168;
-    while(current_position < (long)size)
+    while(current_position < size)
     {
 
         pulse_file.seekg(current_position);
@@ -166,6 +166,7 @@ void Processing::calibrate(QString pulse_path, QString noise_path)
     pulse_file.close();
 
 
+    
     //Compute factor
     EP.computeFactor();
     save_f.open("Factor.txt",std::ios::out);
@@ -190,7 +191,7 @@ void Processing::calibrate(QString pulse_path, QString noise_path)
         pulse_file.read(str,4);
     }
     current_position+=168;
-    while(current_position < (long)size)
+    while(current_position < size)
     {
 
         pulse_file.seekg(current_position);
@@ -254,7 +255,7 @@ void Processing::calibrate(QString pulse_path, QString noise_path)
         pulse_file.read(str,4);
     }
     current_position+=168;
-    while(current_position < (long)size)
+    while(current_position < size)
     {
         pulse_file.seekg(current_position);
         pulse_file.read(str,4);
@@ -300,15 +301,14 @@ void Processing::calibrate(QString pulse_path, QString noise_path)
 
 
 
-
     // Observations
 
     std::fstream file,file_s;
-    file.open("dump_dre_20190520-174807.dat", std::ios::in|std::ios::binary);
+    file.open("dump_dre_20190521-160117.dat", std::ios::in|std::ios::binary);
     file.seekg(0, std::ios::end);
     size = file.tellg();
     file.close();
-    file.open("dump_dre_20190520-174807.dat", std::ios::in|std::ios::binary);
+    file.open("dump_dre_20190521-160117.dat", std::ios::in|std::ios::binary);
     file >> std::noskipws;
 
     std::vector<double> ener,offf;
@@ -323,7 +323,7 @@ void Processing::calibrate(QString pulse_path, QString noise_path)
         file.read(str,4);
     }
     current_position+=168;
-    while(current_position < (long)size)
+    while(current_position < size)
     {
 
         file.seekg(current_position);
@@ -345,4 +345,5 @@ void Processing::calibrate(QString pulse_path, QString noise_path)
         file_s << ener[i] << "\t" << offf[i] << std::endl;
     }
     file_s.close();
+
 }

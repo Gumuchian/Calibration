@@ -32,6 +32,6 @@ HEADERS  += mainwindow.h \
     event_processor.h \
     processing.h
 
-INCLUDEPATH += C:\Users\Paul\Downloads\Boost\boost_1_66_0
+INCLUDEPATH += C:\Users\Paul\Downloads\boost_1_69_0
 
 FORMS    += mainwindow.ui
