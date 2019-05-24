@@ -349,17 +349,9 @@ void Event_Processor::setB_coeff(vector<double> v)
 
 double Event_Processor::getData(char buffer[])
 {
-    int I,Q;
-    I=(unsigned char)buffer[1]*256 + (unsigned char)buffer[0];
-    Q=(unsigned char)buffer[3]*256 + (unsigned char)buffer[2];
-    if (I>31767)
-    {
-        I=I-65536;
-    }
-    if (Q>31767)
-    {
-        Q=Q-65536;
-    }
+    short I,Q;
+    I=(((uint16_t)buffer[1] << 8) & 0xff00) | ((uint16_t)buffer[0] & 0x00ff);
+    Q=(((uint16_t)buffer[3] << 8) & 0xff00) | ((uint16_t)buffer[2] & 0x00ff);
     return sqrt(pow(I,2)+pow(Q,2));
 }
 
