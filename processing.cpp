@@ -297,4 +297,50 @@ void Processing::calibrate(QString pulse_path, QString noise_path)
 
     EP.setP_coeff(p_coeff);
     EP.setPhase(mean_phase);
+
+
+    // Observations
+
+       std::fstream file,file_s;
+       file.open("dump_dre_20190524-180108.dat", std::ios::in|std::ios::binary);
+       file.seekg(0, std::ios::end);
+       size = file.tellg();
+       file.close();
+       file.open("dump_dre_20190524-180108.dat", std::ios::in|std::ios::binary);
+       file >> std::noskipws;
+
+       std::vector<double> ener,offf;
+       EP.setRecording();
+       EP.setThreshold(thres);
+
+       current_position=0;
+       while(str[0]!=(char)0xda || str[1]!=(char)0xda || str[2]!=(char)0x80 || str[3]!=(char)0x2a)
+       {
+           ++current_position;
+           file.seekg(current_position);
+           file.read(str,4);
+       }
+       current_position+=168;
+       while(current_position < size)
+       {
+
+           file.seekg(current_position);
+           file.read(str,4);
+           EP.setInput(EP.getData(str));
+           EP.computeEventProcessor();
+           if (EP.getRecording())
+           {
+               ener.push_back(EP.getEnergy());
+               offf.push_back(EP.getOffset());
+           }
+           current_position+=344;
+       }
+       file.close();
+
+       file_s.open("List_energies.txt",std::ios::out);
+       for (int i=0;i<(int)ener.size();i++)
+       {
+           file_s << ener[i] << "\t" << offf[i] << std::endl;
+       }
+       file_s.close();
 }
