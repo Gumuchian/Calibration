@@ -357,10 +357,22 @@ double Event_Processor::getData(char buffer[])
 
 double Event_Processor::computeMean()
 {
-    double sum=0;
+    double sum=0,n=0;
     for (int i=0;i<170;i++)
     {
         sum+=Buffer((index+1+i)%200);
+        if(Buffer((index+1+i)%200) != 0)
+        {
+            ++n;
+        }
     }
-    return sum/170.0;
+    return sum/n;
+}
+
+void Event_Processor::reset_buffer()
+{
+    for (int i=0;i<200;i++)
+    {
+        Buffer(i)=0;
+    }
 }

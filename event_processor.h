@@ -48,6 +48,7 @@ class Event_Processor
         void setP_coeff(vector<double> v);
         void setB_coeff(vector<double> v);
         double computeMean();
+        void reset_buffer();
 
     private:
         int index;

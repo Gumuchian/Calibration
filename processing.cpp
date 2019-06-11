@@ -19,8 +19,34 @@ void Processing::calibrate(QString pulse_path, QString noise_path)
 {
     std::fstream pulse_file,noise_file,save_RI,save_f;
     std::vector<double> energy_p,energy_b,t0,off;
-
-
+    /*FILE* m_eventFile;
+    std::fstream file,fil;
+    file.open("test.txt",std::ios::out);
+    double timestamp;
+    quint8 channel;
+    quint8 pixelNum;
+    float energy;
+    float offset;
+    //QString filename = "events20190521-160118.dat";
+    //m_eventFile = fopen(filename.toStdString().c_str(), "rb");
+    fil.open("events20190521-160118.dat",std::ios::in|std::ios::binary);
+    fil.seekg(0, std::ios::end);
+    long long size =fil.tellg();
+    fil.close();
+    fil.open("events20190521-160118.dat", std::ios::in|std::ios::binary);
+    //fil >> std::noskipws;
+   long long current =0;
+    while (current<size)
+    {
+        current+=18;
+        char str[18],buf[4];
+        fil.read(str,18);
+        buf[0]=str[10];buf[1]=str[11];buf[2]=str[12];buf[3]=str[13];
+        file << *(float *)&buf << std::endl;
+    }
+    file.close();
+    fil.close();*/
+/*
     //Set offset
     char str[4];
     int s=0;
@@ -298,49 +324,86 @@ void Processing::calibrate(QString pulse_path, QString noise_path)
     EP.setP_coeff(p_coeff);
     EP.setPhase(mean_phase);
 
-
+*/
     // Observations
+    std::fstream file1,file2;
+    file1.open("Factor.txt",std::ios::in);
+    file2.open("Pattern.txt",std::ios::in);
+    double factor;
+    file1 >> factor;
+    EP.setFactor(factor);
 
-       std::fstream file,file_s;
-       file.open("dump_dre_20190524-180108.dat", std::ios::in|std::ios::binary);
-       file.seekg(0, std::ios::end);
-       size = file.tellg();
-       file.close();
-       file.open("dump_dre_20190524-180108.dat", std::ios::in|std::ios::binary);
-       file >> std::noskipws;
+    vector<double> IR(2048);
+    for (int i=0;i<2048;i++)
+    {
+        file2 >> IR(i);
+    }
+    EP.setImpulseResponse(IR);
 
-       std::vector<double> ener,offf;
-       EP.setRecording();
-       EP.setThreshold(thres);
+    double s_offset;
+    file1 >> s_offset;
+    EP.setOffset(s_offset);
 
-       current_position=0;
-       while(str[0]!=(char)0xda || str[1]!=(char)0xda || str[2]!=(char)0x80 || str[3]!=(char)0x2a)
-       {
-           ++current_position;
-           file.seekg(current_position);
-           file.read(str,4);
-       }
-       current_position+=168;
-       while(current_position < size)
-       {
+    vector<double> coeff(2),p_coeff(3);
+    for (int i=0;i<2;i++)
+    {
+        file1 >> coeff(i);
+    }
+    EP.setB_coeff(coeff);
 
-           file.seekg(current_position);
-           file.read(str,4);
-           EP.setInput(EP.getData(str));
-           EP.computeEventProcessor();
-           if (EP.getRecording())
-           {
-               ener.push_back(EP.getEnergy());
-               offf.push_back(EP.getOffset());
-           }
-           current_position+=344;
-       }
-       file.close();
+    for (int i=0;i<3;i++)
+    {
+        file1 >> p_coeff(i);
+    }
+    EP.setP_coeff(p_coeff);
 
-       file_s.open("List_energies.txt",std::ios::out);
-       for (int i=0;i<(int)ener.size();i++)
-       {
-           file_s << ener[i] << "\t" << offf[i] << std::endl;
-       }
-       file_s.close();
+    double mean_phase;
+    file1 >> mean_phase;
+    EP.setPhase(mean_phase);
+
+
+    std::fstream file,file_s;
+    file.open("dump_dre_20190527-165221.dat", std::ios::in|std::ios::binary);
+    file.seekg(0, std::ios::end);
+    long long size = file.tellg();
+    char str[4];
+    file.close();
+    file.open("dump_dre_20190527-165221.dat", std::ios::in|std::ios::binary);
+    file >> std::noskipws;
+
+    std::vector<double> ener,offf;
+    EP.setRecording();
+    EP.setThreshold(150);
+
+    long current_position=0;
+    while(str[0]!=(char)0xda || str[1]!=(char)0xda || str[2]!=(char)0x80 || str[3]!=(char)0x2a)
+    {
+        ++current_position;
+        file.seekg(current_position);
+        file.read(str,4);
+    }
+    current_position+=168;
+    while(current_position < size)
+    {
+
+        file.seekg(current_position);
+        file.read(str,4);
+        EP.setInput(EP.getData(str));
+        EP.computeEventProcessor();
+        if (EP.getRecording())
+        {
+            ener.push_back(EP.getEnergy());
+            offf.push_back(EP.getOffset());
+        }
+        current_position+=344;
+    }
+    file.close();
+
+    file_s.open("List_energies.txt",std::ios::out);
+    for (int i=0;i<(int)ener.size();i++)
+    {
+        //file_s << ener[i] << "\t" << offf[i] << std::endl;
+        file_s << ener[i] << std::endl;
+    }
+    file_s.close();
 }
