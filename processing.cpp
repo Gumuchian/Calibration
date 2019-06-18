@@ -46,7 +46,7 @@ void Processing::calibrate(QString pulse_path, QString noise_path)
     }
     file.close();
     fil.close();*/
-/*
+
     //Set offset
     char str[4];
     int s=0;
@@ -324,7 +324,7 @@ void Processing::calibrate(QString pulse_path, QString noise_path)
     EP.setP_coeff(p_coeff);
     EP.setPhase(mean_phase);
 
-*/
+    /*
     // Observations
     std::fstream file1,file2;
     file1.open("Factor.txt",std::ios::in);
@@ -360,22 +360,24 @@ void Processing::calibrate(QString pulse_path, QString noise_path)
     double mean_phase;
     file1 >> mean_phase;
     EP.setPhase(mean_phase);
-
+*/
 
     std::fstream file,file_s;
-    file.open("dump_dre_20190527-165221.dat", std::ios::in|std::ios::binary);
+    file.open("20190527_163458_0000_IQ-ALL_ER-Pulse-Charact@7keV.dat", std::ios::in|std::ios::binary);
     file.seekg(0, std::ios::end);
-    long long size = file.tellg();
-    char str[4];
+    //long long size = file.tellg();
+    size = file.tellg();
+    //char str[4];
     file.close();
-    file.open("dump_dre_20190527-165221.dat", std::ios::in|std::ios::binary);
+    file.open("20190527_163458_0000_IQ-ALL_ER-Pulse-Charact@7keV.dat", std::ios::in|std::ios::binary);
     file >> std::noskipws;
 
     std::vector<double> ener,offf;
     EP.setRecording();
-    EP.setThreshold(150);
+    EP.setThreshold(thres);
 
-    long current_position=0;
+    //long current_position=0;
+    current_position=0;
     while(str[0]!=(char)0xda || str[1]!=(char)0xda || str[2]!=(char)0x80 || str[3]!=(char)0x2a)
     {
         ++current_position;
